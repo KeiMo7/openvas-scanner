@@ -80,6 +80,24 @@ credential_key = "verysecretive"
 
 # Iteration interval for the scheduler
 check_interval = "500ms"
+# Scheduling policy:
+# - "fifo": preserve the original queue order (default)
+# - "target_aware": group by target network, serialize one task per group,
+#   and let unrelated groups run in parallel.
+# mode = "target_aware"
+#
+# A group that has waited this many scheduling rounds is selected ahead of the
+# normal oldest-first order. Set to 0 to disable forced selection.
+# starvation_threshold = 5
+#
+# Batch strategy for large targets:
+# - "count": split after batch_size addresses; a batch may cross networks
+# - "address_segment": group addresses by prefix before splitting; segments
+#   are kept separate, at the cost of more, smaller batches
+# batch_strategy = "count"
+# batch_size = 256
+# group_prefix_v4 = 24
+# group_prefix_v6 = 64
 
 [container_image_scanner]
 # Defines how many scans can be resolved to images although another scan is running.

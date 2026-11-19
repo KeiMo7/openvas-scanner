@@ -160,6 +160,30 @@ pub struct Notus {
     pub url: Option<url::Url>,
 }
 
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum SchedulingMode {
+    /// Preserve the original first-in-first-out behavior.
+    #[default]
+    Fifo,
+    /// Group queued scans by target network and schedule one scan per group at a time.
+    TargetAware,
+}
+
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize,
+)]
+#[serde(rename_all = "snake_case")]
+pub enum BatchStrategy {
+    /// Split large targets into batches that may cross network boundaries.
+    #[default]
+    Count,
+    /// Build batches per network segment, keeping different segments separate.
+    AddressSegment,
+}
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct Scheduler {
     #[serde(default)]
@@ -173,6 +197,41 @@ pub struct Scheduler {
         serialize_with = "scannerlib::utils::duration::serialize"
     )]
     pub check_interval: Duration,
+    /// Scheduling policy. The default remains FIFO for backwards compatibility.
+    #[serde(default)]
+    pub mode: SchedulingMode,
+    /// Number of consecutive scheduling rounds after which a waiting group is
+    /// selected ahead of normally ordered work. Zero disables forced selection.
+    #[serde(default = "default_starvation_threshold")]
+    pub starvation_threshold: u32,
+    /// How large target lists are split into batches.
+    #[serde(default)]
+    pub batch_strategy: BatchStrategy,
+    /// Maximum number of addresses in one batch.
+    #[serde(default = "default_batch_size")]
+    pub batch_size: usize,
+    /// IPv4 prefix used to identify target groups.
+    #[serde(default = "default_v4_prefix")]
+    pub group_prefix_v4: u8,
+    /// IPv6 prefix used to identify target groups.
+    #[serde(default = "default_v6_prefix")]
+    pub group_prefix_v6: u8,
+}
+
+fn default_starvation_threshold() -> u32 {
+    5
+}
+
+fn default_batch_size() -> usize {
+    256
+}
+
+fn default_v4_prefix() -> u8 {
+    24
+}
+
+fn default_v6_prefix() -> u8 {
+    64
 }
 
 impl Default for Scheduler {
@@ -182,6 +241,12 @@ impl Default for Scheduler {
             max_queued_scans: None,
             max_running_scans: None,
             min_free_mem: None,
+            mode: SchedulingMode::Fifo,
+            starvation_threshold: default_starvation_threshold(),
+            batch_strategy: BatchStrategy::Count,
+            batch_size: default_batch_size(),
+            group_prefix_v4: default_v4_prefix(),
+            group_prefix_v6: default_v6_prefix(),
         }
     }
 }

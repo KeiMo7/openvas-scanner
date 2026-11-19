@@ -9,6 +9,8 @@ use crate::database::sqlite::DataBase;
 
 use crate::{config::Config, crypt::Crypter, vts::orchestrator};
 pub(crate) mod scheduling;
+pub(crate) mod scheduler_store;
+pub(crate) mod target_scheduler;
 
 pub async fn init(
     pool: DataBase,

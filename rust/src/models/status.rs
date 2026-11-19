@@ -70,6 +70,9 @@ pub enum Phase {
     Stopped,
     /// A scan could not finish due to an error while scanning
     Failed,
+    /// A scan was not started because one of its configured dependencies did
+    /// not succeed.
+    NotExecuted,
     /// A scan has been successfully finished
     Succeeded,
 }
@@ -95,6 +98,7 @@ impl FromStr for Phase {
             "running" => Ok(Phase::Running),
             "stopped" => Ok(Phase::Stopped),
             "failed" => Ok(Phase::Failed),
+            "not_executed" => Ok(Phase::NotExecuted),
             "succeeded" => Ok(Phase::Succeeded),
             "stored" => Ok(Phase::Stored),
             a => Err(PhaseError::UnknownPhase(a.to_string())),
@@ -109,6 +113,7 @@ impl AsRef<str> for Phase {
             Self::Running => "running",
             Self::Stopped => "stopped",
             Self::Failed => "failed",
+            Self::NotExecuted => "not_executed",
             Self::Succeeded => "succeeded",
             Self::Stored => "stored",
         }

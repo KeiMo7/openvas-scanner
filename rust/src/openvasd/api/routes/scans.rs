@@ -43,6 +43,9 @@ pub fn router(
         )
         .route("/", post(post_scans))
         .route("/preferences", get(get_scans_preferences))
+        .route("/scheduler/snapshot", get(get_scheduler_snapshot))
+        .route("/scheduler/snapshots", get(get_scheduler_snapshots))
+        .route("/scheduler/records", get(get_scheduler_records))
         .route("/{id}", get(get_scans_id))
         .route("/{id}", post(post_scans_id))
         .route("/{id}", delete(delete_scans_id))
@@ -52,6 +55,47 @@ pub fn router(
         // enable authentication for all routes
         .layer(AuthLayer::new(auth_method, api_keys))
         .with_state(scanner)
+}
+
+/// `GET /scans/scheduler/snapshot` route handler.
+///
+/// Returns the latest target-aware queue snapshot. The snapshot contains each
+/// group's target range, enqueue time, wait duration, current load and the
+/// reason it was last skipped.
+async fn get_scheduler_snapshot(
+    State(scanner): State<ScannerBridge>,
+) -> Result<impl IntoResponse, ApiError> {
+    crate::scans::scheduler_store::latest_snapshot(&scanner.pool)
+        .await
+        .map(Json)
+        .map_err(|error| ApiError::UnavailableCmd(error.to_string()))
+}
+
+/// `GET /scans/scheduler/snapshots` route handler.
+///
+/// Returns the retained queue snapshot history, newest first. This is the
+/// post-mortem export for reconstructing the queue at an earlier decision.
+async fn get_scheduler_snapshots(
+    State(scanner): State<ScannerBridge>,
+) -> Result<impl IntoResponse, ApiError> {
+    crate::scans::scheduler_store::snapshot_history(&scanner.pool, 100)
+        .await
+        .map(Json)
+        .map_err(|error| ApiError::UnavailableCmd(error.to_string()))
+}
+
+/// `GET /scans/scheduler/records` route handler.
+///
+/// Returns per-task scheduling records, including queue and execution
+/// durations, batch progress and fairness overrides. This is intended for
+/// post-mortem analysis of why tasks were ordered the way they were.
+async fn get_scheduler_records(
+    State(scanner): State<ScannerBridge>,
+) -> Result<impl IntoResponse, ApiError> {
+    crate::scans::scheduler_store::schedule_records(&scanner.pool)
+        .await
+        .map(Json)
+        .map_err(|error| ApiError::UnavailableCmd(error.to_string()))
 }
 
 /// `GET /scans/preferences` route handler.

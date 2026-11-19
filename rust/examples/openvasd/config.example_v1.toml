@@ -104,3 +104,21 @@ path = "/var/lib/openvasd/storage"
 # Iteration interval for the scheduler
 secs = 0
 nanos = 500000000
+
+# Scheduling policy:
+# - "fifo": preserve the original queue order (default)
+# - "target_aware": group by target network, serialize one task per group,
+#   and let unrelated groups run in parallel.
+# mode = "target_aware"
+#
+# A group that has waited this many scheduling rounds is selected ahead of the
+# normal oldest-first order. Set to 0 to disable forced selection.
+# starvation_threshold = 5
+#
+# Batch strategy for large targets:
+# - "count": split after batch_size addresses; a batch may cross networks
+# - "address_segment": group addresses by prefix before splitting
+# batch_strategy = "count"
+# batch_size = 256
+# group_prefix_v4 = 24
+# group_prefix_v6 = 64

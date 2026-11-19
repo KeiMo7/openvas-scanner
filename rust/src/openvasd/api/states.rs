@@ -183,11 +183,13 @@ impl ScannerBridge {
                 Phase::Requested => Err("scan is already requested"),
                 Phase::Running => Err("scan is already running"),
                 Phase::Failed => Err("scan is already failed"),
+                Phase::NotExecuted => Err("scan was not executed because a dependency failed"),
                 Phase::Stored | Phase::Stopped => Ok(scheduling::Message::Start(id.clone())),
             },
             models::Action::Stop => match status.status {
                 Phase::Succeeded => Err("scan is already completed"),
                 Phase::Failed => Err("scan is already failed"),
+                Phase::NotExecuted => Err("scan was not executed"),
                 Phase::Stored | Phase::Stopped => Err("scan is not running"),
                 Phase::Requested | Phase::Running => Ok(scheduling::Message::Stop(id.clone())),
             },
